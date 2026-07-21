@@ -6,6 +6,8 @@ Built and tested on an **Arduino Leonardo**.
 
 Created with **Cursor** and **Grok** AI as a learning exercise.
 
+Video demonstration: https://www.youtube.com/shorts/qK5CSmgW2Gg
+
 ## Hardware
 
 | Part | Notes |
