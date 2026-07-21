@@ -1,0 +1,28 @@
+# Arduino build output
+build/
+*.hex
+*.elf
+*.eep
+*.bin
+*.map
+
+# Object and dependency files
+*.o
+*.d
+*.su
+*.lst
+
+# OS junk
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Editor / IDE
+.vscode/
+.idea/
+*.swp
+*~
+
+# Local secrets or machine-specific config
+secrets.h
+.env
