@@ -40,7 +40,8 @@ static const char MATRIX_CHARS[] =
     "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
     "@#$%^&*<>[]{}|/\\+=?~";
 
-static const unsigned long FRAME_MS = 70;
+static const unsigned long FRAME_MS = 45;
+static const uint8_t SPAWN_CHANCE = 30;  // Per-column chance out of 1000 each frame.
 
 static char randomMatrixChar() {
   return MATRIX_CHARS[random(sizeof(MATRIX_CHARS) - 1)];
@@ -85,10 +86,10 @@ static void resetStream(RainStream &stream) {
 
 static void spawnStream(RainStream &stream) {
   stream.active = true;
-  stream.tailLen = random(2, LCD_ROWS + 1);
+  stream.tailLen = random(3, LCD_ROWS + 1);
   stream.headRow = -(int8_t)random(1, stream.tailLen + 1);
   stream.stepTimer = 0;
-  stream.stepDelay = random(3, 10);
+  stream.stepDelay = random(1, 5);
 
   for (uint8_t i = 1; i < stream.tailLen; i++) {
     stream.tailChars[i] = randomMatrixChar();
@@ -114,7 +115,7 @@ static void stepStream(RainStream &stream) {
   }
 
   // Flicker a random trailing character now and then.
-  if (stream.tailLen > 1 && random(4) == 0) {
+  if (stream.tailLen > 1 && random(3) == 0) {
     uint8_t idx = random(1, stream.tailLen);
     stream.tailChars[idx] = randomMatrixChar();
   }
@@ -125,7 +126,7 @@ static void updateStreams() {
     RainStream &stream = streams[col];
 
     if (!stream.active) {
-      if (random(1000) < 12) {
+      if (random(1000) < SPAWN_CHANCE) {
         spawnStream(stream);
       }
       continue;
@@ -196,7 +197,7 @@ void setup() {
   }
 
   // Start with several visible streams so the screen is not blank at boot.
-  for (uint8_t col = 0; col < LCD_COLS; col += 3) {
+  for (uint8_t col = 0; col < LCD_COLS; col += 2) {
     spawnStream(streams[col]);
     streams[col].headRow = random(0, LCD_ROWS);
   }
