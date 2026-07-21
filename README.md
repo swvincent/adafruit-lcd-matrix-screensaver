@@ -4,6 +4,8 @@ Digital-rain style screensaver for a **20×4 character LCD** driven over **I2C**
 
 Built and tested on an **Arduino Leonardo**.
 
+Created with **Cursor** and **Grok** AI as a learning exercise.
+
 ## Hardware
 
 | Part | Notes |
