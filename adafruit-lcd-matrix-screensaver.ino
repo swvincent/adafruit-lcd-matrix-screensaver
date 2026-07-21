@@ -18,10 +18,6 @@ Adafruit_LiquidCrystal lcd(0);
 static const uint8_t LCD_COLS = 20;
 static const uint8_t LCD_ROWS = 4;
 
-// Custom glyph indices (HD44780 allows 8 user-defined characters).
-static const uint8_t GLYPH_HEAD = 0;
-static const uint8_t GLYPH_FADE = 1;
-
 struct RainStream {
   bool active;
   int8_t headRow;
@@ -35,45 +31,18 @@ RainStream streams[LCD_COLS];
 uint8_t screen[LCD_ROWS][LCD_COLS];
 
 // Characters that evoke the Matrix code rain on a Latin-display LCD.
+// Restricted to glyphs present in the standard HD44780 A00 character ROM
+// (backslash renders as Yen and tilde as an arrow, so they are excluded).
 static const char MATRIX_CHARS[] =
     "0123456789"
     "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
-    "@#$%^&*<>[]{}|/\\+=?~";
+    "@#$%^&*<>[]{}|/+=?";
 
 static const unsigned long FRAME_MS = 45;
 static const uint8_t SPAWN_CHANCE = 30;  // Per-column chance out of 1000 each frame.
 
 static char randomMatrixChar() {
   return MATRIX_CHARS[random(sizeof(MATRIX_CHARS) - 1)];
-}
-
-static void defineMatrixGlyphs() {
-  // Bright leading character.
-  const uint8_t head[8] = {
-      0b01110,
-      0b11111,
-      0b11111,
-      0b11111,
-      0b11111,
-      0b11111,
-      0b01110,
-      0b00000,
-  };
-
-  // Softer character directly behind the head.
-  const uint8_t fade[8] = {
-      0b00000,
-      0b00100,
-      0b01110,
-      0b01110,
-      0b01110,
-      0b00100,
-      0b00000,
-      0b00000,
-  };
-
-  lcd.createChar(GLYPH_HEAD, head);
-  lcd.createChar(GLYPH_FADE, fade);
 }
 
 static void resetStream(RainStream &stream) {
@@ -91,7 +60,7 @@ static void spawnStream(RainStream &stream) {
   stream.stepTimer = 0;
   stream.stepDelay = random(1, 5);
 
-  for (uint8_t i = 1; i < stream.tailLen; i++) {
+  for (uint8_t i = 0; i < stream.tailLen; i++) {
     stream.tailChars[i] = randomMatrixChar();
   }
 }
@@ -115,8 +84,8 @@ static void stepStream(RainStream &stream) {
   }
 
   // Flicker a random trailing character now and then.
-  if (stream.tailLen > 1 && random(3) == 0) {
-    uint8_t idx = random(1, stream.tailLen);
+  if (random(3) == 0) {
+    uint8_t idx = random(0, stream.tailLen);
     stream.tailChars[idx] = randomMatrixChar();
   }
 }
@@ -155,13 +124,7 @@ static void composeFrame() {
         continue;
       }
 
-      if (segment == 0) {
-        screen[row][col] = GLYPH_HEAD;
-      } else if (segment == 1) {
-        screen[row][col] = GLYPH_FADE;
-      } else {
-        screen[row][col] = stream.tailChars[segment];
-      }
+      screen[row][col] = stream.tailChars[segment];
     }
   }
 }
@@ -170,12 +133,7 @@ static void renderFrame() {
   for (uint8_t row = 0; row < LCD_ROWS; row++) {
     lcd.setCursor(0, row);
     for (uint8_t col = 0; col < LCD_COLS; col++) {
-      uint8_t cell = screen[row][col];
-      if (cell < 8) {
-        lcd.write(cell);
-      } else {
-        lcd.write((char)cell);
-      }
+      lcd.write((char)screen[row][col]);
     }
   }
 }
@@ -190,7 +148,6 @@ void setup() {
   }
 
   lcd.setBacklight(HIGH);
-  defineMatrixGlyphs();
 
   for (uint8_t col = 0; col < LCD_COLS; col++) {
     resetStream(streams[col]);
